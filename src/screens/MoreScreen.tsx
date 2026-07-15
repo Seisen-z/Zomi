@@ -476,7 +476,7 @@ export function MoreScreen() {
         </SectionCard>
 
         <SectionCard label="ABOUT">
-          <SettingRow icon={<Info size={16} color={colors.textMuted} />} label="Version" value="2.4.1" />
+          <SettingRow icon={<Info size={16} color={colors.textMuted} />} label="Version" value="1.0.0" />
           <SettingRow
             icon={<Smartphone size={16} color={colors.textMuted} />}
             label="Check for Updates"
