@@ -115,6 +115,53 @@ export function MoreScreen() {
 
   // Tracker logic removed
 
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+
+  const handleCheckForUpdates = async () => {
+    setCheckingUpdates(true);
+    try {
+      const response = await fetch('https://api.github.com/repos/Seisen-z/Zomi/releases/latest');
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+      const data = await response.json();
+      const latestTag = data.tag_name;
+      const currentVersion = '1.0.1';
+
+      const isNewer = (curr: string, late: string) => {
+        const cleanC = curr.replace(/^v/, '');
+        const cleanL = late.replace(/^v/, '');
+        const cParts = cleanC.split('.').map(Number);
+        const lParts = cleanL.split('.').map(Number);
+        for (let i = 0; i < Math.max(cParts.length, lParts.length); i++) {
+          const c = cParts[i] ?? 0;
+          const l = lParts[i] ?? 0;
+          if (l > c) return true;
+          if (c > l) return false;
+        }
+        return false;
+      };
+
+      if (isNewer(currentVersion, latestTag)) {
+        Alert.alert(
+          'Update Available',
+          `A new version (${latestTag}) is available. Would you like to view the release page?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'View Release', onPress: () => Linking.openURL(data.html_url) },
+          ]
+        );
+      } else {
+        Alert.alert('Up to date', `You are on the latest version (${currentVersion}).`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      Alert.alert('Check Failed', 'Could not fetch updates from GitHub. Please try again.');
+    } finally {
+      setCheckingUpdates(false);
+    }
+  };
+
   const update = (patch: Partial<AppPreferences>) => {
     setAppPreferences(patch);
     setPrefs(getAppPreferences());
@@ -476,11 +523,11 @@ export function MoreScreen() {
         </SectionCard>
 
         <SectionCard label="ABOUT">
-          <SettingRow icon={<Info size={16} color={colors.textMuted} />} label="Version" value="1.0.0" />
+          <SettingRow icon={<Info size={16} color={colors.textMuted} />} label="Version" value="1.0.1" />
           <SettingRow
             icon={<Smartphone size={16} color={colors.textMuted} />}
-            label="Check for Updates"
-            onPress={() => Alert.alert('Up to date', "You're on the latest version.")}
+            label={checkingUpdates ? 'Checking for updates…' : 'Check for Updates'}
+            onPress={handleCheckForUpdates}
           />
         </SectionCard>
       </ScrollView>

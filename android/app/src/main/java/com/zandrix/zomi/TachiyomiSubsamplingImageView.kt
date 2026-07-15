@@ -3,6 +3,7 @@ package com.zandrix.zomi
 import android.content.Context
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View.MeasureSpec
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 
 // A plain single tap (confirmed as not the first half of a double-tap) is forwarded to
@@ -13,6 +14,19 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 class TachiyomiSubsamplingImageView(context: Context) : SubsamplingScaleImageView(context) {
     var onSingleTap: ((x: Float, y: Float) -> Unit)? = null
     var onSwipe: ((direction: String) -> Unit)? = null
+
+    private val measureAndLayout = Runnable {
+        measure(
+            MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        )
+        layout(left, top, right, bottom)
+    }
+
+    override fun requestLayout() {
+        super.requestLayout()
+        post(measureAndLayout)
+    }
 
     private val tapDetector = GestureDetector(
         context,
