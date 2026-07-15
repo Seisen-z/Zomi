@@ -116,4 +116,17 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation project(":source-api")
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1"
+
+    // Same manga-page renderer library real Tachiyomi builds on (see Trash/app/build.gradle.kts)
+    // — decodes only the visible tile of a page at full resolution instead of downsampling the
+    // whole huge bitmap into memory, which is what was causing the reader's blur on tall/narrow
+    // raw scans. Real Tachiyomi uses their own fork with an extra native image-decoder module for
+    // wider format support, but that module's JitPack build genuinely fails (needs native
+    // compilation JitPack can't replicate) — this uses the original upstream library instead
+    // (stable release on Maven Central), which tile-decodes standard JPEG/PNG/WEBP pages the same
+    // way via Android's own BitmapRegionDecoder, no extra native dependency needed.
+    implementation "com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0"
 }
