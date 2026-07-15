@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, Alert, Linking, Image } from 'react-native';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import {
   Palette,
   Tags,
@@ -143,14 +144,43 @@ export function MoreScreen() {
       };
 
       if (isNewer(currentVersion, latestTag)) {
-        Alert.alert(
-          'Update Available',
-          `A new version (${latestTag}) is available. Would you like to view the release page?`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'View Release', onPress: () => Linking.openURL(data.html_url) },
-          ]
-        );
+        const apkAsset = data.assets?.find((a: any) => a.name.endsWith('.apk'));
+        if (apkAsset) {
+          Alert.alert(
+            'Update Available',
+            `A new version (${latestTag}) is available. Would you like to download and install it?`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Download & Install',
+                onPress: async () => {
+                  try {
+                    Alert.alert('Downloading Update', 'The update is downloading in the background. You will be prompted to install once it finishes.');
+                    const { fs } = ReactNativeBlobUtil;
+                    const path = `${fs.dirs.CacheDir}/zomi-update.apk`;
+                    if (await fs.exists(path)) {
+                      await fs.unlink(path);
+                    }
+                    await ReactNativeBlobUtil.config({ path }).fetch('GET', apkAsset.browser_download_url);
+                    await ReactNativeBlobUtil.android.actionViewIntent(path, 'application/vnd.android.package-archive');
+                  } catch (downloadErr: any) {
+                    console.error(downloadErr);
+                    Alert.alert('Download Failed', 'Failed to download the update APK.');
+                  }
+                },
+              },
+            ]
+          );
+        } else {
+          Alert.alert(
+            'Update Available',
+            `A new version (${latestTag}) is available. Please view the release page to download it.`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'View Release', onPress: () => Linking.openURL(data.html_url) },
+            ]
+          );
+        }
       } else {
         Alert.alert('Up to date', `You are on the latest version (${currentVersion}).`);
       }
